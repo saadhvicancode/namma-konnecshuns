@@ -9,6 +9,14 @@ Open `index.html` directly, or:
 
     python3 -m http.server 8123
 
+## Deploy
+
+Static site, no build step. Vercel serves the repo root as-is; `vercel.json`
+turns on clean URLs and marks `index.html`, `app.js`, `puzzles.js` and
+`style.css` as must-revalidate. Those files are referenced by bare name with no
+content hash, so a long cache would leave players running old game logic against
+a new puzzle bank.
+
 ## Files
 
 - `index.html`, markup
