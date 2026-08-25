@@ -20,7 +20,7 @@ Dates map to puzzles in `app.js`: `START` is the day puzzle #1 ran, and every da
 since takes the next puzzle, wrapping when it reaches the end. Add puzzles to
 push the wrap further out.
 
-## The two design rules
+## The three design rules
 
 **No board is single-themed.** A puzzle where every group is food tells you
 where to look. Each puzzle draws its four categories from four different
@@ -33,9 +33,14 @@ a waterfall and a Jnanpith laureate. TALE is an English word and the Kannada for
 head. RV is an engineering college and a metro station. A puzzle with no decoy is
 too easy and should be reworked.
 
-Scope is Karnataka-wide, not just Bangalore landmarks: dynasties, Jnanpith
+**Place names are rationed.** "Which Bengaluru road / layout / area is this"
+goes stale after the third time, so only three area wordplay categories survive
+(`___ GATE`, `___ CIRCLE`, `___ ROAD`), each earning its place with history or a
+decoy. The bank leans instead on Kannada as a living language, food, books,
+festivals, childhood and the state beyond the city: dynasties, Jnanpith
 laureates, Haridasa composers, GI-tagged produce, KSRTC bus classes, HAL
-aircraft, handloom towns, Kannada grammar. Depth beats recognisability.
+aircraft, handloom towns, gully games, Sankranti customs, dal names. Depth beats
+recognisability.
 
 ## Deploy
 

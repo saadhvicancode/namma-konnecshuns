@@ -302,8 +302,9 @@
 
     var nxt = nextUnplayed(), nb = $("#nextBtn");
     if (nxt) {
+      var gap = dayNumber(today()) - dayNumber(nxt);
       nb.style.display = "";
-      nb.textContent = "Play " + shortLabel(nxt).toLowerCase() + "'s puzzle";
+      nb.textContent = gap === 1 ? "Play yesterday's puzzle" : "Play " + shortLabel(nxt);
       nb.onclick = function () { closeAll(); openDate(nxt); };
     } else {
       nb.style.display = "none";
