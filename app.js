@@ -1,7 +1,14 @@
-/* Namma Konnecshuns, game logic */
+/* Namma Konnecshuns, game logic.
+
+   Play is date-based. Puzzle #1 ran on START, and each day since then gets the
+   next puzzle in the bank. Today is the default board; the archive holds the
+   previous 47 days, which is one full turn through the bank. Saved games are
+   keyed by date, so a date you already played stays played. */
 (function () {
   "use strict";
 
+  var START = new Date(2026, 7, 3);   // 3 August 2026, the day puzzle #1 ran
+  var ARCHIVE_DAYS = 47;              // how far back the archive lists
   var LEVEL_EMOJI = ["\u{1F7E8}", "\u{1F7E9}", "\u{1F7E6}", "\u{1F7EA}"];
   var WIN_LINES = ["Sakkath! Zero tappu.", "Full solid, bro.", "Chennagide!", "Just about escaped, macha."];
 
@@ -9,21 +16,56 @@
   var grid = $("#grid"), solvedEl = $("#solved"), toastEl = $("#toast");
   var dotsEl = $("#dots"), shuffleBtn = $("#shuffle"), deselectBtn = $("#deselect"), submitBtn = $("#submit");
 
-  var puzzle, state, busy = false;
+  var puzzle, playing, state, busy = false;
+
+  /* ---------- dates ---------- */
+  function midnight(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function today() { return midnight(new Date()); }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function dayNumber(d) { return Math.round((midnight(d) - START) / 86400000); }
+  function dateKey(d) {
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
+  }
+  function fromKey(k) {
+    var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(k || "");
+    return p ? new Date(+p[1], +p[2] - 1, +p[3]) : null;
+  }
+  function puzzleFor(d) {
+    var n = dayNumber(d);
+    return n < 0 ? null : PUZZLES[n % PUZZLES.length];
+  }
+  function shortLabel(d) {
+    var diff = dayNumber(today()) - dayNumber(d);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+  }
+  function longLabel(d) {
+    return d.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  function archiveDates() {
+    var t = today(), span = Math.min(ARCHIVE_DAYS, dayNumber(t));
+    var out = [];
+    for (var i = 0; i <= span; i++) out.push(addDays(t, -i));
+    return out;
+  }
 
   /* ---------- persistence ---------- */
-  function key(id) { return "namma-konnec-" + id; }
+  function key(d) { return "namma-konnec-d-" + dateKey(d); }
   function save() {
-    try { localStorage.setItem(key(puzzle.id), JSON.stringify(state)); } catch (e) {}
+    try { localStorage.setItem(key(playing), JSON.stringify(state)); } catch (e) {}
   }
-  function load(id) {
-    try { return JSON.parse(localStorage.getItem(key(id))); } catch (e) { return null; }
+  function load(d) {
+    try { return JSON.parse(localStorage.getItem(key(d))); } catch (e) { return null; }
   }
-  function statusOf(id) {
-    var s = load(id);
+  function statusOn(d) {
+    var s = load(d);
     if (!s) return "new";
-    if (s.solved.length === 4) return s.mistakes > 0 ? "won" : "lost";
+    if (s.solved && s.solved.length === 4) return s.mistakes > 0 ? "won" : "lost";
     if (s.mistakes <= 0) return "lost";
+    // opening a date writes a board straight away, so an untouched one is still new
+    if (!s.solved.length && s.mistakes === 4 && !(s.history || []).length) return "new";
     return "playing";
   }
 
@@ -43,28 +85,32 @@
     return puzzle.groups.filter(function (g) { return g.words.indexOf(word) > -1; })[0];
   }
 
-  /* A saved game only applies if it was saved against this exact puzzle.
-     Edit the puzzle bank and the old board is stale, so drop it. */
+  /* A saved game only applies if it was saved against this exact board. Edit the
+     puzzle bank and the old tiles are stale, so drop them. */
   function isCurrent(saved) {
     if (!saved || !saved.order || saved.order.length !== 16) return false;
-    var current = allWords(puzzle).slice().sort().join("|");
-    return saved.order.slice().sort().join("|") === current;
+    return saved.order.slice().sort().join("|") === allWords(puzzle).slice().sort().join("|");
   }
 
-  function startPuzzle(id) {
-    puzzle = PUZZLES.filter(function (p) { return p.id === id; })[0] || PUZZLES[0];
-    var saved = load(puzzle.id);
-    if (saved && isCurrent(saved)) {
-      state = saved;
-    } else {
-      state = { order: shuffled(allWords(puzzle)), solved: [], mistakes: 4, history: [] };
-      save();
-    }
+  function openDate(d) {
+    var p = puzzleFor(d);
+    if (!p) { d = today(); p = puzzleFor(d); }
+    if (dayNumber(d) > dayNumber(today())) { d = today(); p = puzzleFor(d); }
+    puzzle = p;
+    playing = d;
+
+    var saved = load(d);
+    state = isCurrent(saved) ? saved
+      : { order: shuffled(allWords(puzzle)), solved: [], mistakes: 4, history: [] };
     state.selected = [];
-    try { localStorage.setItem("namma-konnec-last", String(puzzle.id)); } catch (e) {}
-    $("#puzzleName").textContent = "Puzzle #" + puzzle.id + " · " + puzzle.name;
+    save();
+
+    try { localStorage.setItem("namma-konnec-open", dateKey(d)); } catch (e) {}
+    $("#playing").textContent = shortLabel(d) + " · " + longLabel(d);
     render();
-    if (state.solved.length === 4 || state.mistakes <= 0) setTimeout(function () { showResults(true); }, 450);
+    if (state.solved.length === 4 || state.mistakes <= 0) {
+      setTimeout(function () { showResults(); }, 450);
+    }
   }
 
   /* ---------- render ---------- */
@@ -86,7 +132,6 @@
   }
 
   function render() {
-    // solved rows
     solvedEl.innerHTML = "";
     state.solved.slice().sort(function (a, b) { return a - b; }).forEach(function (lv) {
       var g = puzzle.groups.filter(function (x) { return x.level === lv; })[0];
@@ -98,7 +143,6 @@
       solvedEl.appendChild(row);
     });
 
-    // remaining tiles
     grid.innerHTML = "";
     remaining().forEach(function (w) {
       var b = document.createElement("button");
@@ -109,12 +153,11 @@
       grid.appendChild(b);
     });
 
-    // mistakes
     dotsEl.innerHTML = "";
     for (var i = 0; i < 4; i++) {
-      var d = document.createElement("span");
-      d.className = "dot" + (i < state.mistakes ? "" : " gone");
-      dotsEl.appendChild(d);
+      var dot = document.createElement("span");
+      dot.className = "dot" + (i < state.mistakes ? "" : " gone");
+      dotsEl.appendChild(dot);
     }
 
     fitAll();
@@ -155,7 +198,9 @@
   }
 
   function tilesFor(words) {
-    return words.map(function (w) { return grid.querySelector('[data-word="' + w.replace(/"/g, '\\"') + '"]'); }).filter(Boolean);
+    return words.map(function (w) {
+      return grid.querySelector('[data-word="' + w.replace(/"/g, '\\"') + '"]');
+    }).filter(Boolean);
   }
 
   /* ---------- submit ---------- */
@@ -163,7 +208,7 @@
     if (busy || state.selected.length !== 4) return;
     var picked = state.selected.slice();
     var levels = picked.map(function (w) { return groupOf(w).level; });
-    var sig = levels.slice().sort().join("|") + "::" + picked.slice().sort().join("|");
+    var sig = picked.slice().sort().join("|");
 
     if (state.history.some(function (h) { return h.sig === sig; })) {
       toast("Already guessed, maga!");
@@ -172,9 +217,7 @@
 
     busy = true;
     var tiles = tilesFor(picked);
-    tiles.forEach(function (t, i) {
-      setTimeout(function () { t.classList.add("bounce"); }, i * 100);
-    });
+    tiles.forEach(function (t, i) { setTimeout(function () { t.classList.add("bounce"); }, i * 100); });
 
     setTimeout(function () {
       tiles.forEach(function (t) { t.classList.remove("bounce"); });
@@ -187,8 +230,8 @@
         state.solved.push(levels[0]);
         state.selected = [];
         save(); render();
-        if (state.solved.length === 4) { busy = false; finish(true); return; }
         busy = false;
+        if (state.solved.length === 4) finish();
       } else {
         state.mistakes--;
         save();
@@ -196,15 +239,10 @@
         if (max === 3) toast("Swalpa adjust maadi, one away!");
         setTimeout(function () {
           tiles.forEach(function (t) { t.classList.remove("jiggle"); });
-          if (state.mistakes <= 0) {
-            state.selected = [];
-            render();
-            busy = false;
-            revealRest();
-          } else {
-            render();
-            busy = false;
-          }
+          state.selected = state.mistakes <= 0 ? [] : state.selected;
+          render();
+          busy = false;
+          if (state.mistakes <= 0) revealRest();
         }, 620);
       }
     }, 720);
@@ -220,14 +258,12 @@
         state.solved.push(g.level);
         state.selected = [];
         save(); render();
-        if (i === left.length - 1) finish(false);
+        if (i === left.length - 1) finish();
       }, 900 + i * 750);
     });
   }
 
-  function finish(won) {
-    setTimeout(function () { showResults(false, won); }, 900);
-  }
+  function finish() { setTimeout(showResults, 900); }
 
   /* ---------- results ---------- */
   function emojiRows() {
@@ -237,17 +273,25 @@
   }
   function shareText() {
     var won = state.mistakes > 0;
-    return "Namma Konnecshuns #" + puzzle.id + ": " + puzzle.name + "\n" +
-      emojiRows().join("\n") + "\n" +
+    return "Namma Konnecshuns, " + longLabel(playing) + "\n" + emojiRows().join("\n") + "\n" +
       (won ? "Solved with " + state.mistakes + "/4 lives left \u{1F60E}" : "Kai kotta \u{1F62D}");
   }
 
-  function showResults(quiet, wonArg) {
-    var won = wonArg !== undefined ? wonArg : state.mistakes > 0;
+  /* the most recent earlier date that has not been played */
+  function nextUnplayed() {
+    var dates = archiveDates();
+    for (var i = 0; i < dates.length; i++) {
+      if (dayNumber(dates[i]) >= dayNumber(playing)) continue;
+      if (statusOn(dates[i]) === "new") return dates[i];
+    }
+    return null;
+  }
+
+  function showResults() {
+    var won = state.mistakes > 0;
     $("#resTitle").textContent = won ? WIN_LINES[Math.max(0, 4 - state.mistakes)] : "Aiyyo!";
-    $("#resSub").textContent = won
-      ? "Puzzle #" + puzzle.id + " · " + puzzle.name
-      : "Ran out of chances on Puzzle #" + puzzle.id + ".";
+    $("#resSub").textContent = longLabel(playing) + (won ? "" : ". Ran out of chances.");
+
     var eg = $("#emojiGrid");
     eg.innerHTML = "";
     emojiRows().forEach(function (r) {
@@ -255,10 +299,15 @@
       d.textContent = r;
       eg.appendChild(d);
     });
-    var nxt = PUZZLES.filter(function (p) { return statusOf(p.id) === "new"; })[0];
-    var nb = $("#nextBtn");
-    if (nxt) { nb.style.display = ""; nb.onclick = function () { closeAll(); startPuzzle(nxt.id); }; }
-    else nb.style.display = "none";
+
+    var nxt = nextUnplayed(), nb = $("#nextBtn");
+    if (nxt) {
+      nb.style.display = "";
+      nb.textContent = "Play " + shortLabel(nxt).toLowerCase() + "'s puzzle";
+      nb.onclick = function () { closeAll(); openDate(nxt); };
+    } else {
+      nb.style.display = "none";
+    }
     open($("#results"));
   }
 
@@ -271,20 +320,25 @@
   function buildArchive() {
     var list = $("#plist");
     list.innerHTML = "";
-    PUZZLES.forEach(function (p) {
-      var st = statusOf(p.id);
-      var label = { won: "Solved", lost: "Kai kotta", playing: "In progress", "new": "Not played" }[st];
+    archiveDates().forEach(function (d) {
+      var st = statusOn(d);
+      var tag = { won: "Solved", lost: "Kai kotta", playing: "In progress", "new": "Not played" }[st];
       var b = document.createElement("button");
-      b.className = "pitem" + (puzzle && p.id === puzzle.id ? " active" : "");
+      b.className = "pitem" + (dateKey(d) === dateKey(playing) ? " active" : "");
+
       var left = document.createElement("span");
-      left.innerHTML = "<b>#" + p.id + "</b> ";
-      left.appendChild(document.createTextNode(p.name));
+      var strong = document.createElement("b");
+      strong.textContent = shortLabel(d);
+      left.appendChild(strong);
+      left.appendChild(document.createTextNode(" · #" + puzzleFor(d).id));
+
       var right = document.createElement("span");
       right.className = "tag" + (st === "won" ? " done" : st === "lost" ? " lost" : "");
-      right.textContent = label;
+      right.textContent = tag;
+
       b.appendChild(left);
       b.appendChild(right);
-      b.onclick = function () { closeAll(); startPuzzle(p.id); };
+      b.onclick = function () { closeAll(); openDate(d); };
       list.appendChild(b);
     });
     open($("#archive"));
@@ -305,17 +359,21 @@
   $("#howBtn").onclick = function () { open($("#how")); };
   $("#archBtn").onclick = buildArchive;
   document.querySelectorAll("[data-close]").forEach(function (b) { b.onclick = closeAll; });
+
   $("#shareBtn").onclick = function () {
     var txt = shareText();
     if (navigator.share) { navigator.share({ text: txt }).catch(function () {}); return; }
     navigator.clipboard.writeText(txt).then(
-      function () { $("#shareBtn").textContent = "Copied!"; setTimeout(function () { $("#shareBtn").textContent = "Share results"; }, 1600); },
+      function () {
+        $("#shareBtn").textContent = "Copied!";
+        setTimeout(function () { $("#shareBtn").textContent = "Share results"; }, 1600);
+      },
       function () { window.prompt("Copy your results:", txt); }
     );
   };
   $("#replayBtn").onclick = function () {
-    try { localStorage.removeItem(key(puzzle.id)); } catch (e) {}
-    closeAll(); startPuzzle(puzzle.id);
+    try { localStorage.removeItem(key(playing)); } catch (e) {}
+    closeAll(); openDate(playing);
   };
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") closeAll();
@@ -326,11 +384,17 @@
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fitAll, 120); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
 
-  $("#today").textContent = new Date().toLocaleDateString("en-IN", { month: "long", day: "numeric", year: "numeric" });
+  $("#today").textContent = longLabel(today());
 
-  var last = 1;
-  try { last = parseInt(localStorage.getItem("namma-konnec-last"), 10) || 1; } catch (e) {}
-  startPuzzle(last);
+  /* Reopen where you left off, but only for a date still in the archive window,
+     and never a date from before the game existed. */
+  var startAt = today();
+  try {
+    var was = fromKey(localStorage.getItem("namma-konnec-open"));
+    if (was && dayNumber(was) >= 0 && dayNumber(today()) - dayNumber(was) <= ARCHIVE_DAYS) startAt = was;
+  } catch (e) {}
+  openDate(startAt);
+
   try {
     if (!localStorage.getItem("namma-konnec-seen")) {
       open($("#how"));
