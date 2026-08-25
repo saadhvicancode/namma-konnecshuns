@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Namma Konnecshuns</title>
+<meta name="description" content="A Bengaluru and Karnataka edition of Connections. Find four groups of four.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700;800&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="wordmark"><span class="namma">Namma</span> Konnecshuns</div>
+    <div class="date" id="today"></div>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" id="howBtn">How to play</button>
+    <button class="icon-btn" id="archBtn">Puzzles</button>
+  </div>
+</header>
+
+<main>
+  <div class="tagline">Create four groups of four!</div>
+  <div class="puzzle-name" id="puzzleName"></div>
+
+  <div id="board">
+    <div id="solved"></div>
+    <div id="grid"></div>
+  </div>
+
+  <div class="mistakes">
+    <span>Mistakes remaining:</span>
+    <span id="dots" style="display:flex;gap:8px"></span>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="shuffle">Shuffle</button>
+    <button class="btn" id="deselect">Deselect all</button>
+    <button class="btn filled" id="submit">Submit</button>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<!-- how to play -->
+<div class="overlay" id="how">
+  <button class="close-x" data-close>&times;</button>
+  <div class="sheet">
+    <h2>How to play</h2>
+    <div class="sub">Find groups of four that share something. Bengaluru, Karnataka, Kannada, all of it.</div>
+    <ul>
+      <li>Select four tiles and hit <b>Submit</b> to check your guess.</li>
+      <li>Find the groups without making 4 mistakes.</li>
+      <li>Category colours reveal difficulty:</li>
+    </ul>
+    <ul style="list-style:none;padding-left:0">
+      <li>🟨 Straightforward if you grew up here</li>
+      <li>🟩 Needs a bit of Karnataka</li>
+      <li>🟦 A deep cut</li>
+      <li>🟪 Wordplay. Swalpa adjust maadi.</li>
+    </ul>
+    <p style="color:#5a594e;font-size:14px">Every puzzle plants a decoy: a tile that looks like it belongs somewhere else. SANKEY is a lake and a Raj engineer. GOKAK is a waterfall and a Jnanpith laureate. Only one arrangement of all sixteen works.</p>
+    <button class="btn filled" data-close style="margin-top:10px">Got it, bro</button>
+  </div>
+</div>
+
+<!-- archive -->
+<div class="overlay" id="archive">
+  <button class="close-x" data-close>&times;</button>
+  <div class="sheet">
+    <h2>Puzzles</h2>
+    <div class="sub">48 puzzles. They are meant to be hard. Progress saves on this device.</div>
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<!-- results -->
+<div class="overlay" id="results">
+  <button class="close-x" data-close>&times;</button>
+  <div class="sheet">
+    <h2 id="resTitle"></h2>
+    <div class="sub" id="resSub"></div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <button class="btn filled" id="shareBtn">Share results</button>
+      <button class="btn" id="nextBtn">Next puzzle</button>
+      <button class="btn" id="replayBtn">Replay this one</button>
+      <button class="btn" data-close style="border:none;text-decoration:underline">Back to board</button>
+    </div>
+  </div>
+</div>
+
+<script src="puzzles.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
