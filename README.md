@@ -20,7 +20,15 @@ Dates map to puzzles in `app.js`: `START` is the day puzzle #1 ran, and every da
 since takes the next puzzle, wrapping when it reaches the end. Add puzzles to
 push the wrap further out.
 
-## The three design rules
+## The design rules
+
+**Difficulty comes from the frame, not from trivia.** This is the one that
+matters. A group of four names you have either heard of or you have not is the
+"US presidents 1950-80" trick: it locks out everyone outside the circle without
+being hard for anyone inside it. So tiles are words a stranger would recognise,
+and the work is spotting which frame they sit in. SILK is the worst junction in
+Bengaluru and also the odd one out among keyboard, surfboard and cardboard.
+Knowing the city can actively mislead you, which is the good kind of hard.
 
 **No board is single-themed.** A puzzle where every group is food tells you
 where to look. Each puzzle draws its four categories from four different
@@ -34,13 +42,9 @@ head. RV is an engineering college and a metro station. A puzzle with no decoy i
 too easy and should be reworked.
 
 **Place names are rationed.** "Which Bengaluru road / layout / area is this"
-goes stale after the third time, so only three area wordplay categories survive
-(`___ GATE`, `___ CIRCLE`, `___ ROAD`), each earning its place with history or a
-decoy. The bank leans instead on Kannada as a living language, food, books,
-festivals, childhood and the state beyond the city: dynasties, Jnanpith
-laureates, Haridasa composers, GI-tagged produce, KSRTC bus classes, HAL
-aircraft, handloom towns, gully games, Sankranti customs, dal names. Depth beats
-recognisability.
+goes stale after the third time. The area wordplay that survives has been
+rebuilt on common words: `___ CIRCLE` is now traffic, vicious, arctic, inner,
+not four junctions.
 
 ## Deploy
 
