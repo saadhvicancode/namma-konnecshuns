@@ -7,6 +7,7 @@
 (function () {
   "use strict";
 
+  var SITE = "https://namma-konnecshuns.vercel.app";
   var START = new Date(2026, 7, 3);   // 3 August 2026, the day puzzle #1 ran
   var ARCHIVE_DAYS = 47;              // how far back the archive lists
   var LEVEL_EMOJI = ["\u{1F7E8}", "\u{1F7E9}", "\u{1F7E6}", "\u{1F7EA}"];
@@ -273,8 +274,10 @@
   }
   function shareText() {
     var won = state.mistakes > 0;
+    /* the URL goes in: a score grid nobody can trace back is a wasted share */
     return "Namma Konnecshuns, " + longLabel(playing) + "\n" + emojiRows().join("\n") + "\n" +
-      (won ? "Solved with " + state.mistakes + "/4 lives left \u{1F60E}" : "Kai kotta \u{1F62D}");
+      (won ? "Solved with " + state.mistakes + "/4 lives left \u{1F60E}" : "Kai kotta \u{1F62D}") +
+      "\n" + SITE;
   }
 
   /* the most recent earlier date that has not been played */
