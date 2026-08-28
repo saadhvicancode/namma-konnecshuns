@@ -163,6 +163,9 @@
 
     fitAll();
 
+    var hint = $("#hint");
+    if (hint) hint.classList.toggle("gone", state.history.length > 0);
+
     var over = state.solved.length === 4 || state.mistakes <= 0;
     submitBtn.disabled = state.selected.length !== 4 || over;
     deselectBtn.disabled = state.selected.length === 0 || over;

@@ -94,6 +94,9 @@ header{
 main{width:100%;max-width:var(--board);padding:14px 16px 40px;display:flex;flex-direction:column;align-items:center}
 .tagline{font-size:16px;margin:10px 0 6px;font-weight:500}
 .puzzle-name{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+/* first-timer nudge; removes itself once a guess has been made */
+.hint{font-size:13px;color:var(--muted);margin:-8px 0 14px;text-align:center}
+.hint.gone{display:none}
 
 #board{width:100%;display:flex;flex-direction:column;gap:8px}
 
@@ -174,6 +177,22 @@ main{width:100%;max-width:var(--board);padding:14px 16px 40px;display:flex;flex-
 .sheet .sub{font-size:14px;color:var(--muted);margin-bottom:22px;line-height:1.5}
 .sheet p{font-size:15px;line-height:1.55;text-align:left}
 .sheet ul{text-align:left;font-size:15px;line-height:1.6;padding-left:20px}
+.steps{text-align:left;font-size:15px;line-height:1.7;padding-left:22px;margin:0 0 26px}
+.steps li{padding-left:4px}
+.eg-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;margin-bottom:8px}
+.demo{margin:0 0 26px}
+.demo-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.demo-row .t{
+  background:var(--tile);color:var(--ink);border-radius:5px;padding:16px 2px;
+  font-weight:800;font-size:12px;letter-spacing:.2px;text-align:center;
+}
+.demo-arrow{color:var(--muted);font-size:20px;line-height:1;margin:8px 0}
+.demo-solved{border-radius:5px;padding:11px 8px;color:var(--on-cat)}
+.demo-solved b{display:block;font-size:12px;letter-spacing:.3px}
+.demo-solved span{font-size:12px}
+.legend{list-style:none;padding-left:0;display:flex;flex-direction:column;gap:8px;margin:0 0 26px}
+.legend li{display:flex;align-items:center;gap:12px;font-size:14px}
+.swatch{width:18px;height:18px;border-radius:4px;flex-shrink:0}
 .close-x{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--ink);font-size:26px;cursor:pointer;line-height:1}
 .emoji-grid{display:inline-flex;flex-direction:column;gap:3px;margin:6px 0 20px;font-size:24px;line-height:1}
 .plist{display:flex;flex-direction:column;gap:8px;margin-top:8px}
