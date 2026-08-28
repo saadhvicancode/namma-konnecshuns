@@ -9,7 +9,7 @@
 
   var SITE = "https://namma-konnecshuns.vercel.app";
   var START = new Date(2026, 7, 3);   // 3 August 2026, the day puzzle #1 ran
-  var ARCHIVE_DAYS = 47;              // how far back the archive lists
+  var ARCHIVE_DAYS = 107;             // one full turn through the bank
   var LEVEL_EMOJI = ["\u{1F7E8}", "\u{1F7E9}", "\u{1F7E6}", "\u{1F7EA}"];
   var WIN_LINES = ["Sakkath! Zero tappu.", "Full solid, bro.", "Chennagide!", "Just about escaped, macha."];
 

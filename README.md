@@ -1,7 +1,8 @@
 # Namma Konnecshuns
 
-A Bengaluru and Karnataka edition of NYT Connections. One puzzle a day, plus an
-archive of the last 48 days.
+A Bengaluru and Karnataka edition of NYT Connections. One puzzle a day, with
+every past day in the archive. The bank holds 108 puzzles and runs fresh to
+18 November 2026 before it repeats.
 
 ## Run it
 
@@ -11,8 +12,7 @@ Open `index.html` directly, or:
 
 ## Play
 
-Today's board is the default. The Archive button lists every past date back 48
-days, which is one full turn through the bank, so you can go back and play
+Today's board is the default. The Archive button lists every past date, so you can go back and play
 yesterday's or last week's after you finish today's. Each date keeps its own
 saved game.
 
